@@ -1,4 +1,5 @@
 import chess
+import chess.svg
 
 
 KNIGHT_SQUARES = [
@@ -70,22 +71,33 @@ def rank_targets(board):
     print(f'Ranked targets: {ranked_targets}')
     return ranked_targets
 
-def score_by_material(board):
+def score_by_material_and_position(board):
     score = 0
     for square in chess.SQUARES:
         piece = board.piece_at(square)
         if piece is not None:
             allegiance = 1 if piece.color == chess.WHITE else -1
             score += (piece_value(piece) * allegiance)
+            if piece.piece_type == chess.KNIGHT:
+                score += (KNIGHT_SQUARES[square] * allegiance * .2)
+            if piece.piece_type == chess.BISHOP:
+                score += (BISHOP_SQUARES[square] * allegiance * .2)
+            if piece.piece_type == chess.ROOK:
+                score += (ROOK_SQUARES[square] * allegiance * .2)
+            if piece.piece_type == chess.QUEEN:
+                score += (QUEEN_SQUARES[square] * allegiance * .2)
+    if board.is_checkmate():
+        score += (9999 * -allegiance)
 
     if board.is_check():
         score += (1 * -allegiance)
     
     return score
+    
 
-def minimax(board, depth=2, alpha=-9999, beta=9999):
-    if depth == 0:
-        best_move = [score_by_material(board), board.move_stack[-depth]]
+def minimax(board, depth=4, alpha=-9999, beta=9999):
+    if depth == 0 or board.is_game_over():
+        best_move = [score_by_material_and_position(board), board.move_stack[-depth]]
         
         return best_move
     best_move = [alpha, None] if board.turn == chess.WHITE else [beta, None]
@@ -118,7 +130,7 @@ board = chess.Board()
 
 while not board.is_game_over():
     print(board)
-    print("Material score: ", score_by_material(board))
+    print("Material score: ", score_by_material_and_position(board))
     num_moves = len(board.move_stack)
     while len(board.move_stack) == num_moves:
         if board.turn == chess.WHITE:
@@ -133,8 +145,11 @@ while not board.is_game_over():
                 print(f'{move} is not a legal uci move on the board.')
             except:
                 print(f'An error occurred while processing {move}.')
+        svg_content = chess.svg.board(board)
+        with open("/home/jocko/podman/www/chess_board.svg", "w") as file:
+            file.write(svg_content)
 
 print("Game over")
 print("Final board:")
 print(board)
-print("Material score: ", score_by_material(board))
+print("Material score: ", score_by_material_and_position(board))
