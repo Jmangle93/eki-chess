@@ -1,4 +1,5 @@
 import chess
+import chess.svg
 
 
 KNIGHT_SQUARES = [
@@ -83,8 +84,8 @@ def score_by_material(board):
     
     return score
 
-def minimax(board, depth=2, alpha=-9999, beta=9999):
-    if depth == 0:
+def minimax(board, depth=4, alpha=-9999, beta=9999):
+    if depth == 0 or board.is_game_over():
         best_move = [score_by_material(board), board.move_stack[-depth]]
         
         return best_move
@@ -133,6 +134,9 @@ while not board.is_game_over():
                 print(f'{move} is not a legal uci move on the board.')
             except:
                 print(f'An error occurred while processing {move}.')
+        svg_content = chess.svg.board(board)
+        with open("/home/jocko/podman/www/chess_board.svg", "w") as file:
+            file.write(svg_content)
 
 print("Game over")
 print("Final board:")
